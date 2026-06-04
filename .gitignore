@@ -1,0 +1,21 @@
+# Claude Code — internos de sesión, planes, memoria del proyecto
+.claude/
+
+# Dependencia upstream xarm_ros (se clona aparte, ver CLAUDE.md)
+repo/
+src/xarm_ros
+
+# Artefactos de build de catkin (ROS 1)
+build/
+devel/
+install/
+log/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# OS
+.DS_Store
+Thumbs.db
