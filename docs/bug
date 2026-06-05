@@ -1,0 +1,136 @@
+martfactory@smartfactory:~/xArm-cobot$ rm -rf build devel
+smartfactory@smartfactory:~/xArm-cobot$ rosdep update
+reading in sources list data from /etc/ros/rosdep/sources.list.d
+Hit https://raw.githubusercontent.com/ros/rosdistro/master/rosdep/osx-homebrew.yaml
+Hit https://raw.githubusercontent.com/ros/rosdistro/master/rosdep/base.yaml
+Hit https://raw.githubusercontent.com/ros/rosdistro/master/rosdep/python.yaml
+Hit https://raw.githubusercontent.com/ros/rosdistro/master/rosdep/ruby.yaml
+Hit https://raw.githubusercontent.com/ros/rosdistro/master/releases/fuerte.yaml
+Query rosdistro index https://raw.githubusercontent.com/ros/rosdistro/master/index-v4.yaml
+Skip end-of-life distro "ardent"
+Skip end-of-life distro "bouncy"
+Skip end-of-life distro "crystal"
+Skip end-of-life distro "dashing"
+Skip end-of-life distro "eloquent"
+Skip end-of-life distro "foxy"
+Skip end-of-life distro "galactic"
+Skip end-of-life distro "groovy"
+Add distro "humble"
+Skip end-of-life distro "hydro"
+Skip end-of-life distro "indigo"
+Skip end-of-life distro "iron"
+Skip end-of-life distro "jade"
+Add distro "jazzy"
+Add distro "kilted"
+Skip end-of-life distro "kinetic"
+Skip end-of-life distro "lunar"
+Add distro "lyrical"
+Skip end-of-life distro "melodic"
+Skip end-of-life distro "noetic"
+Add distro "rolling"
+updated cache in /home/smartfactory/.ros/rosdep/sources.cache
+smartfactory@smartfactory:~/xArm-cobot$ rosdep install --from-paths src --ignore-src -r -y
+ERROR: the following packages/stacks could not have their rosdep keys resolved
+to system dependencies:
+xarm_moveit_servo: Cannot locate rosdep definition for [moveit_servo]
+Continuing to install resolvable dependencies...
+#All required rosdeps installed successfully
+smartfactory@smartfactory:~/xArm-cobot$ catkin_make
+Base path: /home/smartfactory/xArm-cobot
+Source space: /home/smartfactory/xArm-cobot/src
+Build space: /home/smartfactory/xArm-cobot/build
+Devel space: /home/smartfactory/xArm-cobot/devel
+Install space: /home/smartfactory/xArm-cobot/install
+####
+#### Running command: "cmake /home/smartfactory/xArm-cobot/src -DCATKIN_DEVEL_PREFIX=/home/smartfactory/xArm-cobot/devel -DCMAKE_INSTALL_PREFIX=/home/smartfactory/xArm-cobot/install -G Unix Makefiles" in "/home/smartfactory/xArm-cobot/build"
+####
+-- The C compiler identification is GNU 9.4.0
+-- The CXX compiler identification is GNU 9.4.0
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Using CATKIN_DEVEL_PREFIX: /home/smartfactory/xArm-cobot/devel
+-- Using CMAKE_PREFIX_PATH: /opt/ros/noetic
+-- This workspace overlays: /opt/ros/noetic
+-- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3") 
+-- Using PYTHON_EXECUTABLE: /usr/bin/python3
+-- Using Debian Python package layout
+-- Found PY_em: /usr/lib/python3/dist-packages/em.py  
+-- Using empy: /usr/lib/python3/dist-packages/em.py
+-- Using CATKIN_ENABLE_TESTING: ON
+-- Call enable_testing()
+-- Using CATKIN_TEST_RESULTS_DIR: /home/smartfactory/xArm-cobot/build/test_results
+-- Forcing gtest/gmock from source, though one was otherwise available.
+-- Found gtest sources under '/usr/src/googletest': gtests will be built
+-- Found gmock sources under '/usr/src/googletest': gmock will be built
+-- Found PythonInterp: /usr/bin/python3 (found version "3.8.10") 
+-- Found Threads: TRUE  
+-- Using Python nosetests: /usr/bin/nosetests3
+-- catkin 0.8.12
+-- BUILD_SHARED_LIBS is on
+-- BUILD_SHARED_LIBS is on
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- ~~  traversing 28 packages in topological order:
+-- ~~  - gom_xarm_bridge
+-- ~~  - multi_xarm5
+-- ~~  - xarm_bringup
+-- ~~  - xarm_description
+-- ~~  - dual_xarm6_moveit_config
+-- ~~  - lite6_moveit_config
+-- ~~  - uf_robot_moveit_config
+-- ~~  - xarm5_gripper_moveit_config
+-- ~~  - xarm5_moveit_config
+-- ~~  - xarm5_vacuum_gripper_moveit_config
+-- ~~  - xarm6_gripper_moveit_config
+-- ~~  - xarm6_moveit_config
+-- ~~  - xarm6_vacuum_gripper_moveit_config
+-- ~~  - xarm7_gripper_moveit_config
+-- ~~  - xarm7_moveit_config
+-- ~~  - xarm7_vacuum_gripper_moveit_config
+-- ~~  - xarm_msgs
+-- ~~  - xarm_sdk
+-- ~~  - camera_demo
+-- ~~  - xarm7_redundancy_res
+-- ~~  - xarm_api
+-- ~~  - run_recorded_traj
+-- ~~  - xarm_controller
+-- ~~  - xarm_gazebo
+-- ~~  - xarm_gripper
+-- ~~  - xarm_moveit_servo
+-- ~~  - xarm_planner
+-- ~~  - d435i_xarm_setup
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-- +++ processing catkin package: 'gom_xarm_bridge'
+-- ==> add_subdirectory(gom_xarm_bridge)
+-- Could NOT find xarm_msgs (missing: xarm_msgs_DIR)
+-- Could not find the required component 'xarm_msgs'. The following CMake error indicates that you either need to install the package with the same name or change your environment so that it can be found.
+CMake Error at /opt/ros/noetic/share/catkin/cmake/catkinConfig.cmake:83 (find_package):
+  Could not find a package configuration file provided by "xarm_msgs" with
+  any of the following names:
+
+    xarm_msgsConfig.cmake
+    xarm_msgs-config.cmake
+
+  Add the installation prefix of "xarm_msgs" to CMAKE_PREFIX_PATH or set
+  "xarm_msgs_DIR" to a directory containing one of the above files.  If
+  "xarm_msgs" provides a separate development package or SDK, be sure it has
+  been installed.
+Call Stack (most recent call first):
+  gom_xarm_bridge/CMakeLists.txt:4 (find_package)
+
+
+-- Configuring incomplete, errors occurred!
+See also "/home/smartfactory/xArm-cobot/build/CMakeFiles/CMakeOutput.log".
+See also "/home/smartfactory/xArm-cobot/build/CMakeFiles/CMakeError.log".
+Invoking "cmake" failed
+smartfactory@smartfactory:~/xArm-cobot$ 
+
