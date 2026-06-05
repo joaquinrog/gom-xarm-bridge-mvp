@@ -21,7 +21,7 @@ El problema: la API de scripting Python de GOM Inspect está bloqueada tras una 
 │  ATOS Core 3D Scanner    │          │  xArm 5-axis Robot              │
 │         ↓                │          │         ↑                       │
 │  GOM Inspect 2019 Free   │          │  /xarm/move_line service        │
-│  (operador exporta CSV)  │          │         ↑                       │
+│  (operador exporta XML)  │          │         ↑                       │
 │         ↓                │  TCP     │  bridge_node.py                 │
 │  gom_watcher.py          │─────────▶│  (nodo ROS, servidor TCP)       │
 │  (detecta el archivo,    │  :9999   │                                 │
@@ -32,7 +32,7 @@ El problema: la API de scripting Python de GOM Inspect está bloqueada tras una 
 
 **Flujo del operador (3 pasos):**
 1. Escanear la pieza con el escáner ATOS Core.
-2. En GOM Inspect: `File → Export → Feature List → Save as CSV` (dos clics).
+2. En GOM Inspect: `File → Export → Elements → Elements (XML)` y guardar en la carpeta configurada (dos clics).
 3. El resto es automático — el script watcher detecta el archivo, extrae las coordenadas del centroide y el brazo robótico se mueve a la posición correcta en ~1 segundo.
 
 ---
@@ -125,17 +125,22 @@ cd xArm-cobot
 pip install watchdog
 ```
 
-Abre `windows_scripts/gom_watcher.py` y configura estas cuatro variables al inicio del archivo:
+Abre `windows_scripts/gom_watcher.py` y configura las variables al inicio del archivo:
 
 ```python
-WATCH_DIR    = r"C:\GOM_Exports"   # carpeta donde GOM guarda el CSV
-ROBOT_IP     = "192.168.31.100"     # IP del PC Linux
-FEATURE_NAME = "Center"            # texto que identifica la fila del centroide en el CSV
-COL_X        = "X [mm]"           # nombre exacto de la columna X en tu exportación de GOM
-COL_Y        = "Y [mm]"           # nombre exacto de la columna Y en tu exportación de GOM
+WATCH_DIR    = r"C:\GOM_Exports"   # carpeta donde GOM guarda el XML
+ROBOT_IP     = "192.168.31.100"    # IP del PC Linux
+FEATURE_NAME = "Center"            # texto que identifica el feature del centroide
+
+# Estructura del XML — ajustar si GOM Inspect usa tags distintos
+TAG_ELEMENT           = "element"  # tag de cada feature: <element name="Center">
+ATTR_NAME             = "name"     # atributo con el nombre del feature
+TAG_COORDINATE_PARENT = "actual"   # sub-tag que contiene X e Y (None si están al nivel raíz)
+TAG_X                 = "x"        # tag con el valor X en mm
+TAG_Y                 = "y"        # tag con el valor Y en mm
 ```
 
-> **Consejo:** Exporta un CSV de prueba desde GOM Inspect y ábrelo en un editor de texto para confirmar los nombres de columna exactos y el delimitador (`;` o `,`) antes de ejecutar el script.
+> **Consejo:** Exporta un XML de prueba desde GOM Inspect y ábrelo con el Bloc de notas. Localiza el bloque del feature "Center" y copia los nombres exactos de los tags para ajustar `TAG_ELEMENT`, `TAG_X` y `TAG_Y`.
 
 ---
 
@@ -199,15 +204,15 @@ Para un MVP sobre una mesa plana, esto se reduce a una transformación afín 2D 
 | Middleware del robot | ROS 1 Noetic |
 | Driver del robot | [xarm_ros](https://github.com/xArm-Developer/xarm_ros) |
 | Comunicación | TCP socket, payload JSON |
-| Vigilancia de archivos | Python `watchdog` |
+| Vigilancia de archivos | Python `watchdog` (detecta `.xml`) |
 
 ---
 
 ## Limitaciones del MVP
 
-- **Exportación manual:** el operador debe hacer clic en "Export CSV" en GOM Inspect. Es consecuencia de la restricción de la licencia Basic.
+- **Exportación manual:** el operador debe hacer clic en "Export XML" en GOM Inspect. Es consecuencia de la restricción de la licencia Basic.
 - **Sin transformación de coordenadas:** las coordenadas brutas del escáner se envían tal cual. Ver la sección de calibración arriba.
-- **Una pieza a la vez:** el bridge procesa un archivo CSV por ciclo de escaneo.
+- **Una pieza a la vez:** el bridge procesa un archivo XML por ciclo de escaneo.
 - **Sin recuperación de errores:** si el robot falla a mitad de un movimiento, el bridge registra el error pero no reintenta ni alerta al operador.
 
 ---
@@ -308,13 +313,18 @@ Abre `windows_scripts\gom_watcher.py` con el Bloc de notas. Localiza el bloque d
 
 ```python
 WATCH_DIR    = r"C:\GOM_Exports"   # no cambiar si usaste el paso 2.3
-ROBOT_IP     = "192.168.31.100"     # ← CAMBIAR a la IP real del PC Linux (Parte 0.1)
+ROBOT_IP     = "192.168.31.100"    # ← CAMBIAR a la IP real del PC Linux (Parte 0.1)
 FEATURE_NAME = "Center"            # nombre del feature de centroide en GOM Inspect
-COL_X        = "X [mm]"           # encabezado exacto de la columna X en el CSV
-COL_Y        = "Y [mm]"           # encabezado exacto de la columna Y en el CSV
+
+# Estructura del XML — ajustar si GOM usa tags distintos
+TAG_ELEMENT           = "element"  # tag de cada feature
+ATTR_NAME             = "name"     # atributo con el nombre del feature
+TAG_COORDINATE_PARENT = "actual"   # sub-tag que contiene X e Y
+TAG_X                 = "x"        # tag con el valor X en mm
+TAG_Y                 = "y"        # tag con el valor Y en mm
 ```
 
-> **Cómo confirmar los nombres de columna:** exporta un CSV de prueba (ver Parte 4, paso 4.3) y ábrelo con el Bloc de notas. La primera línea son los encabezados — copia el texto exacto, incluyendo espacios y corchetes.
+> **Cómo confirmar los tags XML:** exporta un XML de prueba (ver Parte 4, paso 4.3) y ábrelo con el Bloc de notas. Busca el bloque del feature "Center" y copia los nombres exactos de los tags para `TAG_ELEMENT`, `TAG_X` y `TAG_Y`.
 
 **2.5 Verificar que el script arranca sin errores**
 
@@ -325,9 +335,9 @@ Salida esperada:
 ```
 [INFO] Monitoreando: C:\GOM_Exports
 [INFO] Robot: 192.168.31.100:9999
-[INFO] Esperando exportación CSV de GOM Inspect...
+[INFO] Esperando exportación XML de GOM Inspect...
 ```
-Detén el script con `Ctrl+C`. El watcher no conecta con el robot hasta detectar un CSV nuevo — es normal que no muestre más nada.
+Detén el script con `Ctrl+C`. El watcher no conecta con el robot hasta detectar un XML nuevo — es normal que no muestre más nada.
 
 ---
 
@@ -461,18 +471,17 @@ python windows_scripts\gom_watcher.py
 2. Si el centroide no está ya definido: `Insertar → Feature → Punto → Centroide de superficie`.
 3. Asegúrate de que el feature se llame **"Center"** (o el valor de `FEATURE_NAME` que hayas configurado).
 
-**4.3 Exportar el Feature List como CSV**
+**4.3 Exportar los elementos como XML**
 
-1. En GOM Inspect: `Archivo → Exportar → Lista de features`.
+1. En GOM Inspect: `Archivo → Exportar → Elementos → Elementos (XML)`.
 2. En el cuadro de diálogo:
-   - Tipo de archivo: **CSV (*.csv)**
+   - Tipo de archivo: **XML (*.xml)**
    - Directorio: `C:\GOM_Exports`
-   - Separador: **punto y coma (`;`)**
 3. Haz clic en **Guardar**.
 
 El watcher en Windows responde inmediatamente:
 ```
-[INFO] CSV detectado: C:\GOM_Exports\features_001.csv
+[INFO] XML detectado: C:\GOM_Exports\features_001.xml
 [INFO] Centroide encontrado: X=123.456 Y=78.900
 [OK]   Enviado al robot → X=123.456 Y=78.900
 ```
@@ -489,8 +498,9 @@ La Terminal Linux 3 confirma:
 | Síntoma | Causa probable | Solución |
 |---|---|---|
 | `[ERROR] No se pudo conectar a 192.168.31.100:9999` | `bridge_node.py` no corre, o IP incorrecta | Verifica Terminal Linux 3; revisa `ROBOT_IP` en `gom_watcher.py` |
-| `[WARN] No se encontró ninguna fila con 'Center'` | Nombre del feature en GOM ≠ `FEATURE_NAME` | Ajusta `FEATURE_NAME` o renombra el feature en GOM Inspect |
-| `[ERROR] Columnas no encontradas` | Encabezados CSV distintos a `COL_X`/`COL_Y` | Abre el CSV con Bloc de notas, copia los encabezados exactos |
+| `[WARN] No se encontró ningún elemento con 'Center'` | Nombre del feature en GOM ≠ `FEATURE_NAME`, o `TAG_ELEMENT` incorrecto | Abre el XML con Bloc de notas, confirma el tag y el atributo de nombre |
+| `[ERROR] Tags no encontrados` | `TAG_X` / `TAG_Y` no coinciden con el XML real | Abre el XML con Bloc de notas, copia los tags exactos |
+| `[ERROR] XML malformado` | GOM no terminó de escribir el archivo | Aumenta el `time.sleep(0.5)` a `1.0` en `XMLHandler.on_created` |
 | `xArm respondió ret=1` o `ret=11` | Robot en modo incorrecto | Repite la secuencia `motion_ctrl → set_mode → set_state` del paso 4.0 |
 | Robot no se mueve, sin mensaje de error | Coordenadas fuera del espacio de trabajo | Verifica que X,Y estén dentro del alcance del brazo; reduce `Z_FIXED` |
 
