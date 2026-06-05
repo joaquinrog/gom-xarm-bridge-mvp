@@ -1,6 +1,6 @@
 # gom-xarm-bridge-mvp
 
-Bridge ROS 1 que conecta un escáner 3D ATOS Core (GOM Inspect, Windows) con un brazo robótico xArm 5-axis (Linux). Un script Python en Windows detecta la exportación manual de un CSV desde GOM Inspect, extrae las coordenadas X,Y del centroide de la pieza y las manda por TCP al nodo ROS en Linux, que mueve el efector final a esa posición.
+Bridge ROS 1 que conecta un escáner 3D ATOS Core (GOM Inspect, Windows) con un brazo robótico xArm 5-axis (Linux). Un script Python en Windows detecta la exportación manual de un XML desde GOM Inspect, extrae las coordenadas X,Y del centroide de la pieza y las manda por TCP al nodo ROS en Linux, que mueve el efector final a esa posición.
 
 ## Stack
 
@@ -74,10 +74,13 @@ En `windows_scripts/gom_watcher.py`:
 
 | Variable | Descripción |
 |----------|-------------|
-| `WATCH_DIR` | Carpeta donde GOM exporta el CSV |
+| `WATCH_DIR` | Carpeta donde GOM exporta el XML |
 | `ROBOT_IP` | IP de la PC Linux |
-| `FEATURE_NAME` | Texto que identifica la fila del centroide en el CSV |
-| `COL_X / COL_Y` | Nombres exactos de las columnas X e Y del CSV de GOM |
+| `FEATURE_NAME` | Texto que identifica el feature del centroide en el XML |
+| `TAG_ELEMENT` | Tag XML de cada feature (p. ej. `element`) |
+| `ATTR_NAME` | Atributo que contiene el nombre del feature (p. ej. `name`) |
+| `TAG_COORDINATE_PARENT` | Sub-tag con las coordenadas (p. ej. `actual`), o `None` |
+| `TAG_X / TAG_Y` | Tags con los valores X e Y en mm |
 
 ## Advertencia de seguridad
 
