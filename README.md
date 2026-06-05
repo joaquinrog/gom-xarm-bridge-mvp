@@ -395,6 +395,8 @@ source devel/setup.bash
 ```
 La primera compilación tarda 3–8 minutos. Al finalizar debe aparecer `[100%] Built target ...`.
 
+> **Si falla con error `Invoking "cmake" failed` o `Could NOT find xarm_msgs`:** consulta [TROUBLESHOOTING_CMAKE.md](docs/TROUBLESHOOTING_CMAKE.md) para la solución.
+
 Añade el entorno al `.bashrc` para no repetirlo en cada terminal:
 ```bash
 echo "source ~/xArm-cobot/devel/setup.bash" >> ~/.bashrc
