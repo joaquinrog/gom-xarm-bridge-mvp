@@ -101,7 +101,7 @@ Ambas máquinas deben estar en la misma red local.
 
 ```bash
 # 1. Clonar este repositorio
-git clone https://github.com/<tu-usuario>/gom-xarm-bridge-mvp.git xArm-cobot
+git clone https://github.com/joaquinrog/gom-xarm-bridge-mvp.git xArm-cobot
 cd xArm-cobot
 
 # 2. Clonar la dependencia xarm_ros
@@ -120,7 +120,7 @@ source devel/setup.bash
 ### Windows
 
 ```cmd
-git clone https://github.com/<tu-usuario>/gom-xarm-bridge-mvp.git xArm-cobot
+git clone https://github.com/joaquinrog/gom-xarm-bridge-mvp.git xArm-cobot
 cd xArm-cobot
 pip install watchdog
 ```
@@ -279,7 +279,7 @@ El ATOS Core viene **pre-calibrado de fábrica**. Solo necesitas recalibrar cuan
 **2.0 Clonar el repositorio**
 
 ```cmd
-git clone https://github.com/<tu-usuario>/gom-xarm-bridge-mvp.git xArm-cobot
+git clone https://github.com/joaquinrog/gom-xarm-bridge-mvp.git xArm-cobot
 cd xArm-cobot
 ```
 
@@ -358,7 +358,7 @@ rosdep update
 
 ```bash
 # Clona este repositorio si aún no lo tienes
-git clone https://github.com/<tu-usuario>/gom-xarm-bridge-mvp.git ~/xArm-cobot
+git clone https://github.com/joaquinrog/gom-xarm-bridge-mvp.git ~/xArm-cobot
 cd ~/xArm-cobot
 
 # Clona el driver oficial de xArm como dependencia externa
