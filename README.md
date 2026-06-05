@@ -1,18 +1,18 @@
 # gom-xarm-bridge-mvp
 
-> A lightweight ROS 1 bridge that connects a GOM Inspect 3D scanner (Windows) to a UFactory xArm 5-axis robot (Linux) using only free tools, a TCP socket, and two Python scripts.
+> Un bridge ROS 1 ligero que conecta un escáner 3D GOM Inspect (Windows) con un robot UFactory xArm de 5 ejes (Linux) usando solo herramientas gratuitas, un socket TCP y dos scripts Python.
 
 ---
 
-## The Problem
+## El Problema
 
-Industrial quality inspection and robotic manipulation are usually separate islands. A metrology station measures a part, an engineer reads the numbers, manually enters coordinates into a robot controller, and the robot moves. This project removes the human in the middle.
+La inspección de calidad industrial y la manipulación robótica suelen ser islas separadas. Una estación de metrología mide una pieza, un ingeniero lee los números, los introduce manualmente en el controlador del robot y el robot se mueve. Este proyecto elimina al humano del medio.
 
-The catch: GOM Inspect's Python scripting API is locked behind a Professional license. This project works around that entirely — no license upgrade needed.
+El problema: la API de scripting Python de GOM Inspect está bloqueada tras una licencia Professional. Este proyecto lo evita por completo — sin necesidad de actualizar la licencia.
 
 ---
 
-## How It Works
+## Cómo Funciona
 
 ```
 ┌──────────────────────────┐          ┌─────────────────────────────────┐
@@ -21,98 +21,98 @@ The catch: GOM Inspect's Python scripting API is locked behind a Professional li
 │  ATOS Core 3D Scanner    │          │  xArm 5-axis Robot              │
 │         ↓                │          │         ↑                       │
 │  GOM Inspect 2019 Free   │          │  /xarm/move_line service        │
-│  (operator exports CSV)  │          │         ↑                       │
+│  (operador exporta CSV)  │          │         ↑                       │
 │         ↓                │  TCP     │  bridge_node.py                 │
-│  gom_watcher.py          │─────────▶│  (ROS node, TCP server)         │
-│  (detects file,          │  :9999   │                                 │
-│   parses X,Y,            │  JSON    │                                 │
-│   sends JSON)            │          │                                 │
+│  gom_watcher.py          │─────────▶│  (nodo ROS, servidor TCP)       │
+│  (detecta el archivo,    │  :9999   │                                 │
+│   extrae X,Y,            │  JSON    │                                 │
+│   envía JSON)            │          │                                 │
 └──────────────────────────┘          └─────────────────────────────────┘
 ```
 
-**Operator workflow (3 steps):**
-1. Scan the part with the ATOS Core scanner.
-2. In GOM Inspect: `File → Export → Feature List → Save as CSV` (two clicks).
-3. The rest is automatic — the watcher script detects the file, extracts the centroid coordinates, and the robot arm moves to the correct position within ~1 second.
+**Flujo del operador (3 pasos):**
+1. Escanear la pieza con el escáner ATOS Core.
+2. En GOM Inspect: `File → Export → Feature List → Save as CSV` (dos clics).
+3. El resto es automático — el script watcher detecta el archivo, extrae las coordenadas del centroide y el brazo robótico se mueve a la posición correcta en ~1 segundo.
 
 ---
 
-## Why This Matters — Smart Factory Vision
+## Por Qué Importa — Visión de Fábrica Inteligente
 
-This MVP is intentionally minimal, but it demonstrates the core pattern behind modern adaptive manufacturing:
+Este MVP es intencionalmente mínimo, pero demuestra el patrón central detrás de la manufactura adaptativa moderna:
 
-**Inspect → Decide → Act**, closed-loop, without human intervention.
+**Inspeccionar → Decidir → Actuar**, en bucle cerrado, sin intervención humana.
 
-Some directions this architecture can grow into:
+Algunas direcciones en las que esta arquitectura puede crecer:
 
-| Upgrade | What it unlocks |
+| Mejora | Qué desbloquea |
 |---|---|
-| Replace CSV export with OCR on GOM's screen | Zero manual clicks — fully autonomous loop |
-| Add a coordinate transformation node | Map scanner frame → robot frame automatically after a one-time calibration |
-| Add a depth camera (e.g. RealSense) | Real-time part detection without a dedicated metrology station |
-| Extend bridge to publish on a ROS topic | Multiple robots or downstream nodes subscribe and react |
-| Add MoveIt for path planning | Collision-aware trajectories, not just point-to-point moves |
-| Connect to a MES / SCADA system | The robot reports results back to the factory management layer |
+| Reemplazar la exportación CSV con OCR en la pantalla de GOM | Cero clics manuales — bucle completamente autónomo |
+| Añadir un nodo de transformación de coordenadas | Mapear el frame del escáner → frame del robot automáticamente tras una calibración única |
+| Añadir una cámara de profundidad (ej. RealSense) | Detección de piezas en tiempo real sin estación de metrología dedicada |
+| Extender el bridge para publicar en un topic ROS | Múltiples robots o nodos posteriores se suscriben y reaccionan |
+| Añadir MoveIt para planificación de trayectorias | Trayectorias con detección de colisiones, no solo movimientos punto a punto |
+| Conectar a un sistema MES / SCADA | El robot reporta resultados de vuelta a la capa de gestión de la fábrica |
 
-The idea that a scanner can _tell_ a robot where to go — and the robot just goes — is the building block of lights-out manufacturing cells. This project proves the concept works with off-the-shelf, license-free tools.
+La idea de que un escáner pueda _indicar_ a un robot adónde ir — y que el robot simplemente vaya — es el bloque fundamental de las celdas de manufactura sin operador. Este proyecto demuestra que el concepto funciona con herramientas estándar y libres de licencia.
 
 ---
 
-## Repository Structure
+## Estructura del Repositorio
 
 ```
 gom-xarm-bridge-mvp/
 ├── src/
-│   └── gom_xarm_bridge/          # ROS 1 package (runs on Linux)
+│   └── gom_xarm_bridge/          # paquete ROS 1 (corre en Linux)
 │       ├── package.xml
 │       ├── CMakeLists.txt
 │       └── scripts/
-│           └── bridge_node.py    # TCP server + xArm service caller
+│           └── bridge_node.py    # servidor TCP + llamada al servicio xArm
 ├── windows_scripts/
-│   └── gom_watcher.py            # File watcher + CSV parser (runs on Windows)
-├── CLAUDE.md                     # Context file for Claude Code sessions
+│   └── gom_watcher.py            # vigilante de archivos + parser CSV (corre en Windows)
+├── CLAUDE.md                     # archivo de contexto para sesiones de Claude Code
 └── README.md
 ```
 
-`xarm_ros` (the official UFactory ROS driver) is a separate dependency cloned locally — it is not included in this repository.
+`xarm_ros` (el driver ROS oficial de UFactory) es una dependencia externa clonada localmente — no está incluida en este repositorio.
 
 ---
 
-## Prerequisites
+## Requisitos Previos
 
-**Linux PC:**
+**PC Linux:**
 - ROS 1 Noetic
-- `catkin` build tools
+- Herramientas de build `catkin`
 - Python 3
-- xArm 5-axis robot reachable on the local network
+- Robot xArm de 5 ejes accesible en la red local
 
-**Windows PC:**
+**PC Windows:**
 - Python 3
-- `watchdog` library (`pip install watchdog`)
-- GOM Inspect 2019 (any edition, including Basic/Free)
+- Librería `watchdog` (`pip install watchdog`)
+- GOM Inspect 2019 (cualquier edición, incluyendo Basic/Free)
 
-Both machines must be on the same local network.
+Ambas máquinas deben estar en la misma red local.
 
 ---
 
-## Setup
+## Configuración
 
 ### Linux
 
 ```bash
-# 1. Clone this repo
-git clone https://github.com/<your-user>/gom-xarm-bridge-mvp.git xArm-cobot
+# 1. Clonar este repositorio
+git clone https://github.com/<tu-usuario>/gom-xarm-bridge-mvp.git xArm-cobot
 cd xArm-cobot
 
-# 2. Clone the xarm_ros dependency
+# 2. Clonar la dependencia xarm_ros
 mkdir -p repo
 git clone https://github.com/xArm-Developer/xarm_ros.git repo/xarm_ros --recursive
 
-# 3. Link xarm_ros into the catkin workspace
+# 3. Enlazar xarm_ros al workspace catkin
 mkdir -p src
 ln -s $(pwd)/repo/xarm_ros src/xarm_ros
 
-# 4. Build
+# 4. Compilar
 catkin_make
 source devel/setup.bash
 ```
@@ -123,29 +123,29 @@ source devel/setup.bash
 pip install watchdog
 ```
 
-Open `windows_scripts/gom_watcher.py` and set these four variables at the top of the file:
+Abre `windows_scripts/gom_watcher.py` y configura estas cuatro variables al inicio del archivo:
 
 ```python
-WATCH_DIR    = r"C:\GOM_Exports"   # folder where GOM saves the CSV
-ROBOT_IP     = "192.168.1.100"     # IP address of the Linux PC
-FEATURE_NAME = "Center"            # text that identifies the centroid row in the CSV
-COL_X        = "X [mm]"           # exact column name for X in your GOM export
-COL_Y        = "Y [mm]"           # exact column name for Y in your GOM export
+WATCH_DIR    = r"C:\GOM_Exports"   # carpeta donde GOM guarda el CSV
+ROBOT_IP     = "192.168.1.100"     # IP del PC Linux
+FEATURE_NAME = "Center"            # texto que identifica la fila del centroide en el CSV
+COL_X        = "X [mm]"           # nombre exacto de la columna X en tu exportación de GOM
+COL_Y        = "Y [mm]"           # nombre exacto de la columna Y en tu exportación de GOM
 ```
 
-> **Tip:** Export one test CSV from GOM Inspect first and open it in a text editor to confirm the exact column names and delimiter (`;` or `,`) before running the script.
+> **Consejo:** Exporta un CSV de prueba desde GOM Inspect y ábrelo en un editor de texto para confirmar los nombres de columna exactos y el delimitador (`;` o `,`) antes de ejecutar el script.
 
 ---
 
-## Running
+## Ejecución
 
-**Linux — two terminals:**
+**Linux — dos terminales:**
 
 ```bash
-# Terminal 1: start the xArm hardware driver (replace with your robot's IP)
+# Terminal 1: arrancar el driver de hardware xArm (reemplazar con la IP real del robot)
 roslaunch xarm_bringup xarm5_server.launch robot_ip:=192.168.1.xxx
 
-# Terminal 2: start the bridge node
+# Terminal 2: arrancar el nodo bridge
 rosrun gom_xarm_bridge bridge_node.py
 ```
 
@@ -157,56 +157,56 @@ python windows_scripts\gom_watcher.py
 
 ---
 
-## Configuration Reference
+## Referencia de Configuración
 
-These values in `bridge_node.py` define where and how the robot moves. Set them once to match your physical setup:
+Estos valores en `bridge_node.py` definen dónde y cómo se mueve el robot. Configúralos una vez para que coincidan con tu setup físico:
 
-| Parameter | Default | Description |
+| Parámetro | Valor por defecto | Descripción |
 |---|---|---|
-| `Z_FIXED` | `100.0` | Tool height above the table surface (mm) |
-| `ROLL` | `π (3.1416)` | Tool orientation — default points end-effector downward |
-| `PITCH` | `0.0` | Tool pitch (rad) |
-| `YAW` | `0.0` | Tool yaw (rad) |
-| `SPEED` | `80.0` | Movement speed (mm/s) — keep low during initial testing |
-| `ACC` | `300.0` | Acceleration (mm/s²) |
-| `TCP_PORT` | `9999` | Port the bridge listens on |
+| `Z_FIXED` | `100.0` | Altura de la herramienta sobre la superficie de la mesa (mm) |
+| `ROLL` | `π (3.1416)` | Orientación de la herramienta — por defecto apunta el efector hacia abajo |
+| `PITCH` | `0.0` | Pitch de la herramienta (rad) |
+| `YAW` | `0.0` | Yaw de la herramienta (rad) |
+| `SPEED` | `80.0` | Velocidad de movimiento (mm/s) — mantener baja durante las pruebas iniciales |
+| `ACC` | `300.0` | Aceleración (mm/s²) |
+| `TCP_PORT` | `9999` | Puerto en el que escucha el bridge |
 
 ---
 
-## ⚠️ Coordinate Calibration (Required Before Production Use)
+## ⚠️ Calibración de Coordenadas (Obligatoria Antes de Producción)
 
-The ATOS scanner and the xArm robot live in different coordinate frames. Sending raw scanner coordinates to the robot will result in incorrect positions.
+El escáner ATOS y el robot xArm viven en marcos de coordenadas distintos. Enviar coordenadas brutas del escáner al robot resultará en posiciones incorrectas.
 
-Before using real scan data, perform a hand-eye calibration:
-1. Place at least 3 reference markers at known positions on the table.
-2. Record the X,Y position of each marker in both the GOM Inspect frame and the robot's base frame.
-3. Compute the rigid transformation (rotation + translation) between the two frames.
-4. Apply this transformation in `bridge_node.py` before calling `/xarm/move_line`.
+Antes de usar datos reales del escáner, realiza una calibración mano-ojo:
+1. Coloca al menos 3 marcadores de referencia en posiciones conocidas sobre la mesa.
+2. Registra la posición X,Y de cada marcador tanto en el frame de GOM Inspect como en el frame base del robot.
+3. Calcula la transformación rígida (rotación + traslación) entre los dos frames.
+4. Aplica esta transformación en `bridge_node.py` antes de llamar a `/xarm/move_line`.
 
-For an MVP on a flat table, this reduces to a 2D affine transform (4 parameters).
+Para un MVP sobre una mesa plana, esto se reduce a una transformación afín 2D (4 parámetros).
 
 ---
 
-## Tech Stack
+## Stack Tecnológico
 
-| Component | Technology |
+| Componente | Tecnología |
 |---|---|
-| 3D Scanner | ATOS Core (GOM / Zeiss) |
-| Metrology Software | GOM Inspect 2019 Free |
+| Escáner 3D | ATOS Core (GOM / Zeiss) |
+| Software de metrología | GOM Inspect 2019 Free |
 | Robot | UFactory xArm 5-axis |
-| Robot Middleware | ROS 1 Noetic |
-| Robot Driver | [xarm_ros](https://github.com/xArm-Developer/xarm_ros) |
-| Communication | TCP socket, JSON payload |
-| File Watching | Python `watchdog` |
+| Middleware del robot | ROS 1 Noetic |
+| Driver del robot | [xarm_ros](https://github.com/xArm-Developer/xarm_ros) |
+| Comunicación | TCP socket, payload JSON |
+| Vigilancia de archivos | Python `watchdog` |
 
 ---
 
-## Limitations of This MVP
+## Limitaciones del MVP
 
-- **Manual export step:** the operator must click "Export CSV" in GOM Inspect. This is a consequence of the Basic license restriction.
-- **No coordinate transformation:** raw scanner coordinates are sent as-is. See the calibration section above.
-- **Single part at a time:** the bridge processes one CSV file per scan cycle.
-- **No error recovery:** if the robot fails mid-move, the bridge logs the error but does not retry or alert the operator.
+- **Exportación manual:** el operador debe hacer clic en "Export CSV" en GOM Inspect. Es consecuencia de la restricción de la licencia Basic.
+- **Sin transformación de coordenadas:** las coordenadas brutas del escáner se envían tal cual. Ver la sección de calibración arriba.
+- **Una pieza a la vez:** el bridge procesa un archivo CSV por ciclo de escaneo.
+- **Sin recuperación de errores:** si el robot falla a mitad de un movimiento, el bridge registra el error pero no reintenta ni alerta al operador.
 
 ---
 
@@ -581,6 +581,6 @@ x, y = transform_to_robot_frame(float(coords["x"]), float(coords["y"]))
 
 ---
 
-## License
+## Licencia
 
 MIT
