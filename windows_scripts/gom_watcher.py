@@ -3,56 +3,85 @@ gom_watcher.py — corre en la PC Windows con GOM Inspect.
 
 Workflow:
   1. Ejecutar este script antes de empezar a escanear.
-  2. En GOM Inspect: File > Export > Feature List > guardar en WATCH_DIR.
-  3. El script detecta el CSV, extrae X,Y del centroide y lo envía al robot.
+  2. En GOM Inspect: File > Export > Elements > Elements (XML) > guardar en WATCH_DIR.
+  3. El script detecta el XML, extrae X,Y del centroide y lo envía al robot.
 
 Instalación de dependencias (una sola vez):
   pip install watchdog
 
 Configuración:
-  - Ajustar WATCH_DIR a la carpeta donde GOM guarda el CSV.
+  - Ajustar WATCH_DIR a la carpeta donde GOM guarda el XML.
   - Ajustar ROBOT_IP con la IP de la PC Linux.
   - Ajustar FEATURE_NAME si el nombre del feature en GOM no contiene "Center".
-  - Ajustar los nombres de columna (COL_X, COL_Y) tras inspeccionar un CSV de prueba.
+  - Ajustar los nombres de tag (TAG_ELEMENT, TAG_X, TAG_Y, etc.) tras
+    inspeccionar un XML de prueba con el Bloc de notas.
 """
 
-import csv
 import json
 import os
 import socket
 import time
+import xml.etree.ElementTree as ET
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
 # ── Configuración ─────────────────────────────────────────────────────────────
-WATCH_DIR    = r"C:\GOM_Exports"       # carpeta donde GOM exporta el CSV
+WATCH_DIR    = r"C:\GOM_Exports"       # carpeta donde GOM exporta el XML
 ROBOT_IP     = "192.168.1.100"         # IP de la PC Linux
 ROBOT_PORT   = 9999
 
-FEATURE_NAME = "Center"                # texto que identifica la fila del centroide
-COL_X        = "X [mm]"               # nombre exacto de la columna X en el CSV
-COL_Y        = "Y [mm]"               # nombre exacto de la columna Y en el CSV
-CSV_DELIMITER = ";"                    # GOM usa punto y coma por defecto
+FEATURE_NAME = "Center"                # texto que identifica el feature del centroide
+
+# Estructura del XML exportado por GOM Inspect.
+# Abre un XML de prueba con el Bloc de notas y ajusta estos valores si difieren.
+TAG_ELEMENT           = "element"      # tag de cada feature  (p.ej. <element name="Center">)
+ATTR_NAME             = "name"         # atributo con el nombre del feature
+TAG_COORDINATE_PARENT = "actual"       # sub-tag con las coordenadas; None si están al nivel raíz
+TAG_X                 = "x"           # tag con el valor X en mm
+TAG_Y                 = "y"           # tag con el valor Y en mm
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def parse_centroid(csv_path):
-    """Devuelve (x_mm, y_mm) desde la fila que contiene FEATURE_NAME."""
-    with open(csv_path, newline="", encoding="utf-8-sig") as f:
-        reader = csv.DictReader(f, delimiter=CSV_DELIMITER)
-        for row in reader:
-            # Busca en todas las columnas si algún valor contiene FEATURE_NAME
-            if any(FEATURE_NAME.lower() in str(v).lower() for v in row.values()):
-                try:
-                    x = float(row[COL_X].replace(",", "."))
-                    y = float(row[COL_Y].replace(",", "."))
-                    return x, y
-                except (KeyError, ValueError) as e:
-                    print(f"[ERROR] Columnas no encontradas. Columnas disponibles: {list(row.keys())}")
-                    print(f"        Ajusta COL_X / COL_Y en la configuración. Detalle: {e}")
-                    return None
-    print(f"[WARN] No se encontró ninguna fila con '{FEATURE_NAME}' en {csv_path}")
+def parse_centroid_xml(xml_path):
+    """Devuelve (x_mm, y_mm) desde el elemento que contiene FEATURE_NAME."""
+    try:
+        tree = ET.parse(xml_path)
+    except ET.ParseError as e:
+        print(f"[ERROR] XML malformado en {xml_path}: {e}")
+        return None
+
+    root = tree.getroot()
+
+    for elem in root.iter(TAG_ELEMENT):
+        attr_val = elem.get(ATTR_NAME, "")
+        if FEATURE_NAME.lower() not in attr_val.lower():
+            continue
+
+        coord_node = elem.find(TAG_COORDINATE_PARENT) if TAG_COORDINATE_PARENT else elem
+        if coord_node is None:
+            print(f"[ERROR] Tag '{TAG_COORDINATE_PARENT}' no encontrado dentro de '{attr_val}'. "
+                  f"Ajusta TAG_COORDINATE_PARENT en la configuración.")
+            return None
+
+        x_tag = coord_node.find(TAG_X)
+        y_tag = coord_node.find(TAG_Y)
+
+        if x_tag is None or y_tag is None:
+            missing = [t for t, n in ((TAG_X, x_tag), (TAG_Y, y_tag)) if n is None]
+            print(f"[ERROR] Tags no encontrados: {missing}. "
+                  f"Ajusta TAG_X / TAG_Y en la configuración.")
+            return None
+
+        try:
+            x = float(x_tag.text.replace(",", "."))
+            y = float(y_tag.text.replace(",", "."))
+            return x, y
+        except (ValueError, AttributeError) as e:
+            print(f"[ERROR] No se pudo convertir coordenadas a float: {e}")
+            return None
+
+    print(f"[WARN] No se encontró ningún elemento con '{FEATURE_NAME}' en {xml_path}")
     return None
 
 
@@ -66,12 +95,12 @@ def send_to_robot(x, y):
         print(f"[ERROR] No se pudo conectar a {ROBOT_IP}:{ROBOT_PORT} — {e}")
 
 
-class CSVHandler(FileSystemEventHandler):
+class XMLHandler(FileSystemEventHandler):
     def on_created(self, event):
-        if not event.is_directory and event.src_path.lower().endswith(".csv"):
-            print(f"[INFO] CSV detectado: {event.src_path}")
+        if not event.is_directory and event.src_path.lower().endswith(".xml"):
+            print(f"[INFO] XML detectado: {event.src_path}")
             time.sleep(0.5)  # espera a que GOM termine de escribir el archivo
-            result = parse_centroid(event.src_path)
+            result = parse_centroid_xml(event.src_path)
             if result:
                 x, y = result
                 print(f"[INFO] Centroide encontrado: X={x:.3f} Y={y:.3f}")
@@ -82,10 +111,10 @@ if __name__ == "__main__":
     os.makedirs(WATCH_DIR, exist_ok=True)
     print(f"[INFO] Monitoreando: {WATCH_DIR}")
     print(f"[INFO] Robot: {ROBOT_IP}:{ROBOT_PORT}")
-    print(f"[INFO] Esperando exportación CSV de GOM Inspect...")
+    print(f"[INFO] Esperando exportación XML de GOM Inspect...")
 
     observer = Observer()
-    observer.schedule(CSVHandler(), path=WATCH_DIR, recursive=False)
+    observer.schedule(XMLHandler(), path=WATCH_DIR, recursive=False)
     observer.start()
     try:
         while True:
