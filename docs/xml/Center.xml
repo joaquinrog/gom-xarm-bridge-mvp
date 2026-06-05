@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gom>
+  <header>
+    <version>2019.1</version>
+    <length_unit>mm</length_unit>
+    <angle_unit>deg</angle_unit>
+  </header>
+  <measured>
+    <point id="16778840" name="Center">
+      <state>ok</state>
+      <geometry>
+        <pos x="-19.518444" y="5.796386" z="-11.525326"></pos>
+        <normal x="0.019777" y="0.053355" z="0.998380"></normal>
+      </geometry>
+      <result></result>
+    </point>
+  </measured>
+</gom>

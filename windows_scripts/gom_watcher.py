@@ -12,9 +12,19 @@ Instalación de dependencias (una sola vez):
 Configuración:
   - Ajustar WATCH_DIR a la carpeta donde GOM guarda el XML.
   - Ajustar ROBOT_IP con la IP de la PC Linux.
-  - Ajustar FEATURE_NAME si el nombre del feature en GOM no contiene "Center".
-  - Ajustar los nombres de tag (TAG_ELEMENT, TAG_X, TAG_Y, etc.) tras
-    inspeccionar un XML de prueba con el Bloc de notas.
+  - Ajustar FEATURE_NAME si el nombre del feature en GOM no es "Center".
+  - Ajustar los nombres de tag si la versión de GOM usa una estructura distinta.
+
+Formato XML esperado (GOM Inspect 2019.1):
+  <gom>
+    <measured>
+      <point name="Center">
+        <geometry>
+          <pos x="-19.518" y="5.796" z="-11.525"></pos>
+        </geometry>
+      </point>
+    </measured>
+  </gom>
 """
 
 import json
@@ -31,20 +41,19 @@ WATCH_DIR    = r"C:\GOM_Exports"       # carpeta donde GOM exporta el XML
 ROBOT_IP     = "192.168.1.100"         # IP de la PC Linux
 ROBOT_PORT   = 9999
 
-FEATURE_NAME = "Center"                # texto que identifica el feature del centroide
+FEATURE_NAME = "Center"                # atributo 'name' del feature del centroide
 
-# Estructura del XML exportado por GOM Inspect.
-# Abre un XML de prueba con el Bloc de notas y ajusta estos valores si difieren.
-TAG_ELEMENT           = "element"      # tag de cada feature  (p.ej. <element name="Center">)
-ATTR_NAME             = "name"         # atributo con el nombre del feature
-TAG_COORDINATE_PARENT = "actual"       # sub-tag con las coordenadas; None si están al nivel raíz
-TAG_X                 = "x"           # tag con el valor X en mm
-TAG_Y                 = "y"           # tag con el valor Y en mm
+# Estructura del XML exportado por GOM Inspect 2019.1.
+# Abrir un XML de prueba con el Bloc de notas para verificar si difiere.
+TAG_ELEMENT  = "point"      # tag de cada feature:    <point name="Center">
+ATTR_NAME    = "name"       # atributo con el nombre: name="Center"
+TAG_GEOMETRY = "geometry"   # sub-tag con la posición: <geometry>
+TAG_POS      = "pos"        # tag con coords como atributos: <pos x="..." y="...">
 # ─────────────────────────────────────────────────────────────────────────────
 
 
 def parse_centroid_xml(xml_path):
-    """Devuelve (x_mm, y_mm) desde el elemento que contiene FEATURE_NAME."""
+    """Devuelve (x_mm, y_mm) desde el elemento cuyo atributo 'name' contiene FEATURE_NAME."""
     try:
         tree = ET.parse(xml_path)
     except ET.ParseError as e:
@@ -54,34 +63,38 @@ def parse_centroid_xml(xml_path):
     root = tree.getroot()
 
     for elem in root.iter(TAG_ELEMENT):
-        attr_val = elem.get(ATTR_NAME, "")
-        if FEATURE_NAME.lower() not in attr_val.lower():
+        if FEATURE_NAME.lower() not in elem.get(ATTR_NAME, "").lower():
             continue
 
-        coord_node = elem.find(TAG_COORDINATE_PARENT) if TAG_COORDINATE_PARENT else elem
-        if coord_node is None:
-            print(f"[ERROR] Tag '{TAG_COORDINATE_PARENT}' no encontrado dentro de '{attr_val}'. "
-                  f"Ajusta TAG_COORDINATE_PARENT en la configuración.")
+        geometry = elem.find(TAG_GEOMETRY)
+        if geometry is None:
+            print(f"[ERROR] Tag '{TAG_GEOMETRY}' no encontrado dentro de "
+                  f"'{elem.get(ATTR_NAME)}'. Ajusta TAG_GEOMETRY.")
             return None
 
-        x_tag = coord_node.find(TAG_X)
-        y_tag = coord_node.find(TAG_Y)
+        pos = geometry.find(TAG_POS)
+        if pos is None:
+            print(f"[ERROR] Tag '{TAG_POS}' no encontrado dentro de '{TAG_GEOMETRY}'. "
+                  f"Ajusta TAG_POS.")
+            return None
 
-        if x_tag is None or y_tag is None:
-            missing = [t for t, n in ((TAG_X, x_tag), (TAG_Y, y_tag)) if n is None]
-            print(f"[ERROR] Tags no encontrados: {missing}. "
-                  f"Ajusta TAG_X / TAG_Y en la configuración.")
+        x_str = pos.get("x")
+        y_str = pos.get("y")
+        if x_str is None or y_str is None:
+            missing = [a for a, v in (("x", x_str), ("y", y_str)) if v is None]
+            print(f"[ERROR] Atributos no encontrados en <{TAG_POS}>: {missing}")
             return None
 
         try:
-            x = float(x_tag.text.replace(",", "."))
-            y = float(y_tag.text.replace(",", "."))
+            x = float(x_str.replace(",", "."))
+            y = float(y_str.replace(",", "."))
             return x, y
-        except (ValueError, AttributeError) as e:
+        except ValueError as e:
             print(f"[ERROR] No se pudo convertir coordenadas a float: {e}")
             return None
 
-    print(f"[WARN] No se encontró ningún elemento con '{FEATURE_NAME}' en {xml_path}")
+    print(f"[WARN] No se encontró ningún <{TAG_ELEMENT} {ATTR_NAME}='...{FEATURE_NAME}...'> "
+          f"en {xml_path}")
     return None
 
 

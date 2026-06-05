@@ -130,17 +130,30 @@ Abre `windows_scripts/gom_watcher.py` y configura las variables al inicio del ar
 ```python
 WATCH_DIR    = r"C:\GOM_Exports"   # carpeta donde GOM guarda el XML
 ROBOT_IP     = "192.168.31.100"    # IP del PC Linux
-FEATURE_NAME = "Center"            # texto que identifica el feature del centroide
+FEATURE_NAME = "Center"            # atributo 'name' del feature del centroide
 
-# Estructura del XML — ajustar si GOM Inspect usa tags distintos
-TAG_ELEMENT           = "element"  # tag de cada feature: <element name="Center">
-ATTR_NAME             = "name"     # atributo con el nombre del feature
-TAG_COORDINATE_PARENT = "actual"   # sub-tag que contiene X e Y (None si están al nivel raíz)
-TAG_X                 = "x"        # tag con el valor X en mm
-TAG_Y                 = "y"        # tag con el valor Y en mm
+# Estructura del XML (GOM Inspect 2019.1) — ajustar si tu versión difiere
+TAG_ELEMENT  = "point"     # tag de cada feature:    <point name="Center">
+ATTR_NAME    = "name"      # atributo con el nombre: name="Center"
+TAG_GEOMETRY = "geometry"  # sub-tag con la posición: <geometry>
+TAG_POS      = "pos"       # tag con coords como atributos: <pos x="..." y="...">
 ```
 
-> **Consejo:** Exporta un XML de prueba desde GOM Inspect y ábrelo con el Bloc de notas. Localiza el bloque del feature "Center" y copia los nombres exactos de los tags para ajustar `TAG_ELEMENT`, `TAG_X` y `TAG_Y`.
+El XML que exporta GOM Inspect 2019.1 tiene esta estructura:
+
+```xml
+<gom>
+  <measured>
+    <point name="Center">
+      <geometry>
+        <pos x="-19.518" y="5.796" z="-11.525"></pos>
+      </geometry>
+    </point>
+  </measured>
+</gom>
+```
+
+> **Si tu versión de GOM usa una estructura diferente:** exporta un XML de prueba, ábrelo con el Bloc de notas y ajusta `TAG_ELEMENT`, `TAG_GEOMETRY` y `TAG_POS` en consecuencia.
 
 ---
 
@@ -316,15 +329,14 @@ WATCH_DIR    = r"C:\GOM_Exports"   # no cambiar si usaste el paso 2.3
 ROBOT_IP     = "192.168.31.100"    # ← CAMBIAR a la IP real del PC Linux (Parte 0.1)
 FEATURE_NAME = "Center"            # nombre del feature de centroide en GOM Inspect
 
-# Estructura del XML — ajustar si GOM usa tags distintos
-TAG_ELEMENT           = "element"  # tag de cada feature
-ATTR_NAME             = "name"     # atributo con el nombre del feature
-TAG_COORDINATE_PARENT = "actual"   # sub-tag que contiene X e Y
-TAG_X                 = "x"        # tag con el valor X en mm
-TAG_Y                 = "y"        # tag con el valor Y en mm
+# Estructura del XML (GOM Inspect 2019.1) — valores por defecto correctos
+TAG_ELEMENT  = "point"     # <point name="Center">
+ATTR_NAME    = "name"      # atributo con el nombre del feature
+TAG_GEOMETRY = "geometry"  # sub-tag con la posición
+TAG_POS      = "pos"       # <pos x="..." y="..." z="...">
 ```
 
-> **Cómo confirmar los tags XML:** exporta un XML de prueba (ver Parte 4, paso 4.3) y ábrelo con el Bloc de notas. Busca el bloque del feature "Center" y copia los nombres exactos de los tags para `TAG_ELEMENT`, `TAG_X` y `TAG_Y`.
+> **Cómo verificar:** exporta un XML de prueba (ver Parte 4, paso 4.3) y ábrelo con el Bloc de notas. Confirma que el feature aparece como `<point name="Center">` y las coordenadas como `<pos x="..." y="...">`. Si la estructura difiere, ajusta los valores `TAG_*`.
 
 **2.5 Verificar que el script arranca sin errores**
 
@@ -498,8 +510,9 @@ La Terminal Linux 3 confirma:
 | Síntoma | Causa probable | Solución |
 |---|---|---|
 | `[ERROR] No se pudo conectar a 192.168.31.100:9999` | `bridge_node.py` no corre, o IP incorrecta | Verifica Terminal Linux 3; revisa `ROBOT_IP` en `gom_watcher.py` |
-| `[WARN] No se encontró ningún elemento con 'Center'` | Nombre del feature en GOM ≠ `FEATURE_NAME`, o `TAG_ELEMENT` incorrecto | Abre el XML con Bloc de notas, confirma el tag y el atributo de nombre |
-| `[ERROR] Tags no encontrados` | `TAG_X` / `TAG_Y` no coinciden con el XML real | Abre el XML con Bloc de notas, copia los tags exactos |
+| `[WARN] No se encontró ningún <point name='...Center...'>` | Nombre del feature en GOM ≠ `FEATURE_NAME`, o `TAG_ELEMENT` incorrecto | Abre el XML con Bloc de notas, confirma el tag y el atributo de nombre |
+| `[ERROR] Tag 'geometry' no encontrado` | `TAG_GEOMETRY` no coincide con el XML real | Abre el XML, busca el sub-tag que contiene `<pos>` y ajusta `TAG_GEOMETRY` |
+| `[ERROR] Atributos no encontrados en <pos>` | GOM usa atributo distinto a `x`/`y` | Busca `<pos ...>` en el XML y copia los nombres de atributo exactos |
 | `[ERROR] XML malformado` | GOM no terminó de escribir el archivo | Aumenta el `time.sleep(0.5)` a `1.0` en `XMLHandler.on_created` |
 | `xArm respondió ret=1` o `ret=11` | Robot en modo incorrecto | Repite la secuencia `motion_ctrl → set_mode → set_state` del paso 4.0 |
 | Robot no se mueve, sin mensaje de error | Coordenadas fuera del espacio de trabajo | Verifica que X,Y estén dentro del alcance del brazo; reduce `Z_FIXED` |

@@ -76,11 +76,11 @@ En `windows_scripts/gom_watcher.py`:
 |----------|-------------|
 | `WATCH_DIR` | Carpeta donde GOM exporta el XML |
 | `ROBOT_IP` | IP de la PC Linux |
-| `FEATURE_NAME` | Texto que identifica el feature del centroide en el XML |
-| `TAG_ELEMENT` | Tag XML de cada feature (p. ej. `element`) |
-| `ATTR_NAME` | Atributo que contiene el nombre del feature (p. ej. `name`) |
-| `TAG_COORDINATE_PARENT` | Sub-tag con las coordenadas (p. ej. `actual`), o `None` |
-| `TAG_X / TAG_Y` | Tags con los valores X e Y en mm |
+| `FEATURE_NAME` | Atributo `name` del feature del centroide (p. ej. `"Center"`) |
+| `TAG_ELEMENT` | Tag XML de cada feature — en GOM 2019.1: `"point"` |
+| `ATTR_NAME` | Atributo con el nombre del feature — `"name"` |
+| `TAG_GEOMETRY` | Sub-tag que contiene la posición — `"geometry"` |
+| `TAG_POS` | Tag con coordenadas como atributos `x`/`y`/`z` — `"pos"` |
 
 ## Advertencia de seguridad
 
