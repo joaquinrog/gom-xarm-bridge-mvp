@@ -37,7 +37,7 @@ El problema: la API de scripting Python de GOM Inspect está bloqueada tras una 
 
 ---
 
-## Por Qué Importa — Visión de Fábrica Inteligente
+## Por Qué Importa — Visión Smart Factory
 
 Este MVP es intencionalmente mínimo, pero demuestra el patrón central detrás de la manufactura adaptativa moderna:
 
