@@ -120,6 +120,8 @@ source devel/setup.bash
 ### Windows
 
 ```cmd
+git clone https://github.com/<tu-usuario>/gom-xarm-bridge-mvp.git xArm-cobot
+cd xArm-cobot
 pip install watchdog
 ```
 
@@ -273,6 +275,13 @@ El ATOS Core viene **pre-calibrado de fábrica**. Solo necesitas recalibrar cuan
 ---
 
 ### Parte 2 — Configuración en Windows
+
+**2.0 Clonar el repositorio**
+
+```cmd
+git clone https://github.com/<tu-usuario>/gom-xarm-bridge-mvp.git xArm-cobot
+cd xArm-cobot
+```
 
 **2.1 Verificar / instalar Python 3**
 
