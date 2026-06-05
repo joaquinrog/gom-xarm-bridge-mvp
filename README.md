@@ -328,15 +328,9 @@ Abre `windows_scripts\gom_watcher.py` con el Bloc de notas. Localiza el bloque d
 WATCH_DIR    = r"C:\GOM_Exports"   # no cambiar si usaste el paso 2.3
 ROBOT_IP     = "192.168.31.100"    # ← CAMBIAR a la IP real del PC Linux (Parte 0.1)
 FEATURE_NAME = "Center"            # nombre del feature de centroide en GOM Inspect
-
-# Estructura del XML (GOM Inspect 2019.1) — valores por defecto correctos
-TAG_ELEMENT  = "point"     # <point name="Center">
-ATTR_NAME    = "name"      # atributo con el nombre del feature
-TAG_GEOMETRY = "geometry"  # sub-tag con la posición
-TAG_POS      = "pos"       # <pos x="..." y="..." z="...">
 ```
 
-> **Cómo verificar:** exporta un XML de prueba (ver Parte 4, paso 4.3) y ábrelo con el Bloc de notas. Confirma que el feature aparece como `<point name="Center">` y las coordenadas como `<pos x="..." y="...">`. Si la estructura difiere, ajusta los valores `TAG_*`.
+Los valores `TAG_*` son correctos para GOM Inspect 2019.1 y no es necesario tocarlos.
 
 **2.5 Verificar que el script arranca sin errores**
 
@@ -609,7 +603,7 @@ por:
 x, y = transform_to_robot_frame(float(coords["x"]), float(coords["y"]))
 ```
 
-**Verificación:** escanea uno de los 3 marcadores de referencia y exporta su CSV. Si el robot llega a esa posición dentro de ±2–3 mm, la calibración es correcta para producción.
+**Verificación:** escanea uno de los 3 marcadores de referencia y exporta su XML. Si el robot llega a esa posición dentro de ±2–3 mm, la calibración es correcta para producción.
 
 ---
 
