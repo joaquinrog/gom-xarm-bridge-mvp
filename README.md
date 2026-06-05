@@ -127,7 +127,7 @@ Abre `windows_scripts/gom_watcher.py` y configura estas cuatro variables al inic
 
 ```python
 WATCH_DIR    = r"C:\GOM_Exports"   # carpeta donde GOM guarda el CSV
-ROBOT_IP     = "192.168.1.100"     # IP del PC Linux
+ROBOT_IP     = "192.168.31.100"     # IP del PC Linux
 FEATURE_NAME = "Center"            # texto que identifica la fila del centroide en el CSV
 COL_X        = "X [mm]"           # nombre exacto de la columna X en tu exportación de GOM
 COL_Y        = "Y [mm]"           # nombre exacto de la columna Y en tu exportación de GOM
@@ -143,7 +143,7 @@ COL_Y        = "Y [mm]"           # nombre exacto de la columna Y en tu exportac
 
 ```bash
 # Terminal 1: arrancar el driver de hardware xArm (reemplazar con la IP real del robot)
-roslaunch xarm_bringup xarm5_server.launch robot_ip:=192.168.1.xxx
+roslaunch xarm5_moveit_config realMove_exec.launch robot_ip:=192.168.31.xxx velocity_control:=false report_type:=normal
 
 # Terminal 2: arrancar el nodo bridge
 rosrun gom_xarm_bridge bridge_node.py
@@ -228,23 +228,23 @@ En Windows (Win → buscar "cmd"):
 ```cmd
 ipconfig
 ```
-Anota el valor de `Dirección IPv4` de tu adaptador (p. ej. `192.168.1.50`).
+Anota el valor de `Dirección IPv4` de tu adaptador (p. ej. `192.168.31.50`).
 
 En Linux (abre una terminal):
 ```bash
 ip addr show
 ```
-Anota la IP de la interfaz activa (`eth0`, `enp3s0`, etc. — busca `inet 192.168.1.xxx`).
+Anota la IP de la interfaz activa (`eth0`, `enp3s0`, etc. — busca `inet 192.168.31.xxx`).
 
 **0.2 Verificar conectividad**
 
 ```cmd
 # Desde Windows hacia Linux
-ping 192.168.1.100
+ping 192.168.31.100
 ```
 ```bash
 # Desde Linux hacia Windows
-ping 192.168.1.50
+ping 192.168.31.50
 ```
 Ambos deben recibir respuestas. Si no, revisa que ambas máquinas estén en el mismo switch/router y subred.
 
@@ -299,7 +299,7 @@ Abre `windows_scripts\gom_watcher.py` con el Bloc de notas. Localiza el bloque d
 
 ```python
 WATCH_DIR    = r"C:\GOM_Exports"   # no cambiar si usaste el paso 2.3
-ROBOT_IP     = "192.168.1.100"     # ← CAMBIAR a la IP real del PC Linux (Parte 0.1)
+ROBOT_IP     = "192.168.31.100"     # ← CAMBIAR a la IP real del PC Linux (Parte 0.1)
 FEATURE_NAME = "Center"            # nombre del feature de centroide en GOM Inspect
 COL_X        = "X [mm]"           # encabezado exacto de la columna X en el CSV
 COL_Y        = "Y [mm]"           # encabezado exacto de la columna Y en el CSV
@@ -315,7 +315,7 @@ python windows_scripts\gom_watcher.py
 Salida esperada:
 ```
 [INFO] Monitoreando: C:\GOM_Exports
-[INFO] Robot: 192.168.1.100:9999
+[INFO] Robot: 192.168.31.100:9999
 [INFO] Esperando exportación CSV de GOM Inspect...
 ```
 Detén el script con `Ctrl+C`. El watcher no conecta con el robot hasta detectar un CSV nuevo — es normal que no muestre más nada.
@@ -415,8 +415,8 @@ Ajusta estos valores en `src/gom_xarm_bridge/scripts/bridge_node.py` (líneas 17
 
 **Terminal Linux 1 — driver del robot:**
 ```bash
-# Sustituye 192.168.1.xxx por la IP real del controlador del xArm
-roslaunch xarm_bringup xarm5_server.launch robot_ip:=192.168.1.xxx
+# Sustituye 192.168.31.xxx por la IP real del controlador del xArm
+roslaunch xarm5_moveit_config realMove_exec.launch robot_ip:=192.168.31.xxx velocity_control:=false report_type:=normal
 ```
 Espera hasta ver `xarm is connected!` en la salida.
 
@@ -470,7 +470,7 @@ El watcher en Windows responde inmediatamente:
 
 La Terminal Linux 3 confirma:
 ```
-[INFO] [...] Recibido de ('192.168.1.50', 54321): {"x": 123.456, "y": 78.9}
+[INFO] [...] Recibido de ('192.168.31.50', 54321): {"x": 123.456, "y": 78.9}
 [INFO] [...] Moviendo a X=123.46 Y=78.90 Z=100.0
 [INFO] [...] Movimiento completado OK
 ```
@@ -479,7 +479,7 @@ La Terminal Linux 3 confirma:
 
 | Síntoma | Causa probable | Solución |
 |---|---|---|
-| `[ERROR] No se pudo conectar a 192.168.1.100:9999` | `bridge_node.py` no corre, o IP incorrecta | Verifica Terminal Linux 3; revisa `ROBOT_IP` en `gom_watcher.py` |
+| `[ERROR] No se pudo conectar a 192.168.31.100:9999` | `bridge_node.py` no corre, o IP incorrecta | Verifica Terminal Linux 3; revisa `ROBOT_IP` en `gom_watcher.py` |
 | `[WARN] No se encontró ninguna fila con 'Center'` | Nombre del feature en GOM ≠ `FEATURE_NAME` | Ajusta `FEATURE_NAME` o renombra el feature en GOM Inspect |
 | `[ERROR] Columnas no encontradas` | Encabezados CSV distintos a `COL_X`/`COL_Y` | Abre el CSV con Bloc de notas, copia los encabezados exactos |
 | `xArm respondió ret=1` o `ret=11` | Robot en modo incorrecto | Repite la secuencia `motion_ctrl → set_mode → set_state` del paso 4.0 |

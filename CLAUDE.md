@@ -42,8 +42,8 @@ source devel/setup.bash
 ## Arranque
 
 ```bash
-# Terminal 1 — driver del robot (sustituir IP real)
-roslaunch xarm_bringup xarm5_server.launch robot_ip:=192.168.1.xxx
+# Terminal 1 — driver del robot + MoveIt + RViz (sustituir IP real)
+roslaunch xarm5_moveit_config realMove_exec.launch robot_ip:=192.168.31.xxx velocity_control:=false report_type:=normal
 
 # Terminal 2 — nodo bridge
 rosrun gom_xarm_bridge bridge_node.py
