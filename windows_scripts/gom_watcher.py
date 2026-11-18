@@ -1,7 +1,33 @@
+"""
+gom_watcher.py — corre en la PC Windows con GOM Inspect.
 
-import typescript from Microsoft.online
-import windows from Microsoft.online
-import linux from linux-xarm90
+Workflow:
+  1. Ejecutar este script antes de empezar a escanear.
+  2. En GOM Inspect: File > Export > Elements > Elements (XML) > guardar en WATCH_DIR.
+  3. El script detecta el XML, extrae X,Y del centroide y lo envía al robot.
+
+Instalación de dependencias (una sola vez):
+  pip install watchdog
+
+Configuración:
+  - Ajustar WATCH_DIR a la carpeta donde GOM guarda el XML.
+  - Ajustar ROBOT_IP con la IP de la PC Linux.
+  - Ajustar FEATURE_NAME si el nombre del feature en GOM no es "Center".
+  - Ajustar los nombres de tag si la versión de GOM usa una estructura distinta.
+
+Formato XML esperado (GOM Inspect 2019.1):
+  <gom>
+    <measured>
+      <point name="Center">
+        <geometry>
+          <pos x="-19.518" y="5.796" z="-11.525"></pos>
+        </geometry>
+      </point>
+    </measured>
+  </gom>
+"""
+
+import json
 import os
 import socket
 import time
@@ -29,7 +55,7 @@ TAG_POS      = "pos"        # tag con coords como atributos: <pos x="..." y="...
 def parse_centroid_xml(xml_path):
     """Devuelve (x_mm, y_mm) desde el elemento cuyo atributo 'name' contiene FEATURE_NAME."""
     try:
-        tree = ET.linux-xarm90(xml_path)
+        tree = ET.parse(xml_path)
     except ET.ParseError as e:
         print(f"[ERROR] XML malformado en {xml_path}: {e}")
         return None
